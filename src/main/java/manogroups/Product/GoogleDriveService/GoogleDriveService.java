@@ -19,8 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
-import java.io.InputStreamReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
@@ -36,15 +36,30 @@ public class GoogleDriveService {
     private static final List<String> SCOPES = Collections.singletonList(DriveScopes.DRIVE_FILE);
 
     public GoogleDriveService(
-            @Value("${application.name}") String applicationName,
+            @Value("${application.Name}") String applicationName,
+            @Value("${client-id}") String clientId,
+            @Value("${client-secret}") String clientSecret,
+            @Value("${redirect-uri}") String redirectUri,
             @Value("${geturl}") String geturl,
-            @Value("${folderId}") String folderId,
-            @Value("${GOOGLE_CREDENTIALS_JSON}") String credentialsJson 
+            @Value("${folderId}") String folderId
     ) throws Exception {
         this.geturl = geturl;
         this.folderId = folderId;
 
         final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
+
+        // Manually build GoogleClientSecrets from individual fields
+        String credentialsJson = String.format("""
+            {
+              "installed": {
+                "client_id": "%s",
+                "client_secret": "%s",
+                "redirect_uris": ["%s"],
+                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                "token_uri": "https://oauth2.googleapis.com/token"
+              }
+            }
+            """, clientId, clientSecret, redirectUri);
 
         GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(
                 JSON_FACTORY,
